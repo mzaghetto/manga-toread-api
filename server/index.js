@@ -1,9 +1,12 @@
 import mongoose from 'mongoose'
 import colorConsole from '../lib/color.js'
 import app from './app.js'
+import 'dotenv/config'
+
+console.log(process.env.DB_URL)
 
 mongoose
- .connect('mongodb://db:27017/crud-mongo', {
+ .connect(process.env.DB_URL, {
   useNewUrlParser: true
  })
  .then(result => {
