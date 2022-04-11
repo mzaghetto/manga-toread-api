@@ -11,7 +11,7 @@ router.get('/:manga_name', (req, res) => {
   Manga.findOne({manga_name: req.params.manga_name})
     .then(manga => {
       let dados = {}
-      x(manga.url_manga, '.wp-manga-chapter > a')(function(err, cap) {
+      x(manga.url_manga, '.chapter-link > a > p')(function(err, cap) {
         getData(cap)
       })
 
@@ -22,11 +22,11 @@ router.get('/:manga_name', (req, res) => {
         // replace 'Cap.' in last_ep_released for ' '
         dados.last_ep_released = dados.last_ep_released.replace(/\n/g, '')
         dados.last_ep_released = dados.last_ep_released.replace(/ /g, '')
-        dados.last_ep_released = dados.last_ep_released.replace(/Cap./g, '')
+        dados.last_ep_released = dados.last_ep_released.replace(/Chapter/g, '')
         
-        // transform last_ep_released string to integer
+        // // transform last_ep_released string to integer
         dados.last_ep_released = parseInt(dados.last_ep_released)
-
+        
         res.json(dados)
       }
     })
