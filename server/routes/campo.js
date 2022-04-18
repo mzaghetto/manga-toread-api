@@ -23,7 +23,7 @@ router.get('/buscar', (req, res) => {
 });
 
 // Cria um novo campo e salva no bd
-router.post('/add', (req, res) => {
+router.post('/add', async (req, res) => {
   const novoManga = new Manga({
     manga_name: req.body.manga_name,
     release_day: req.body.release_day,
@@ -32,6 +32,14 @@ router.post('/add', (req, res) => {
     site: req.body.site,
   });
 
+  const mangaAlreadyExists = await Manga.findOne({manga_name: req.body.manga_name})
+
+  if (mangaAlreadyExists) {
+    return res.status(409).json({
+      message: 'Manga já existe no banco de dados'
+    })
+  }
+  
   novoManga
     .save()
     .then(result => {
