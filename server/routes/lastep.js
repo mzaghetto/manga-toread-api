@@ -11,7 +11,11 @@ router.get('/:manga_name', (req, res) => {
   Manga.findOne({manga_name: req.params.manga_name})
     .then(manga => {
       let dados = {}
-      x(manga.url_manga, '.chapter-link > a > p')(function(err, cap) {
+      const classFind = {
+        "manhwatop": ".main.version-chap.active > li > a",
+        "reaperscans": ".chapter-link > a > p",
+      }
+      x(manga.url_manga, classFind[manga.site])(function(err, cap) {
         getData(cap)
       })
 
@@ -26,7 +30,7 @@ router.get('/:manga_name', (req, res) => {
         
         // // transform last_ep_released string to integer
         dados.last_ep_released = parseInt(dados.last_ep_released)
-        
+
         res.json(dados)
       }
     })
