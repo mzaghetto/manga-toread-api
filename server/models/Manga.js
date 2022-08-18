@@ -22,6 +22,10 @@ const mangaSchema = new Schema({
   type: String,
   require: true
  },
+ url_crawler: {
+  type: String,
+  require: false
+ },
  site: {
   type: String,
   require: false

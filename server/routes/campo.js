@@ -30,6 +30,7 @@ router.post('/add', async (req, res) => {
     release_day: req.body.release_day,
     last_episode_read: req.body.last_episode_read,
     url_manga: req.body.url_manga,
+    url_crawler: req.body.url_crawler,
     site: req.body.site,
   });
 
@@ -59,6 +60,7 @@ router.put('/editar/:id', (req, res) => {
     release_day: req.body.release_day,
     last_episode_read: req.body.last_episode_read,
     url_manga: req.body.url_manga,
+    url_crawler: req.body.url_crawler,
     site: req.body.site,
   }
 
