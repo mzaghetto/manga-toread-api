@@ -19,3 +19,6 @@ ou
 ```
 npm run docker:start
 ```
+
+#### Deploy:
+git push heroku main
