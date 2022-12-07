@@ -54,6 +54,7 @@ router.post('/add', async (req, res) => {
 router.put('/editar/:id', (req, res) => {
   const novosDados = {
     manga_name: req.body.manga_name,
+    manga_thumb: req.body.manga_thumb,
     release_day: req.body.release_day,
     last_episode_read: req.body.last_episode_read,
     url_manga: req.body.url_manga,

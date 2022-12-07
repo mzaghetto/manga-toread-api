@@ -6,6 +6,10 @@ const mangaSchema = new Schema({
   type: String,
   required: true
  },
+ manga_thumb: {
+  type: String,
+  required: true
+ },
  last_episode_read: {
   type: Number,
   require: true
