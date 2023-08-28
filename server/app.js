@@ -9,6 +9,11 @@ const app = express()
 
 app.use(cors());
 app.use(bodyParser.json())
+
+app.get('/api/healthCheck', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
 app.use('/api/manga', routerCampo)
 app.use('/api/lastep', routerLastEP)
 app.use('/api/lastepmany', routerLastEPMany)
