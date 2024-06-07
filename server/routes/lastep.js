@@ -1,38 +1,37 @@
-import express from 'express'
-import Manga from '../models/Manga.js'
-import Xray from 'x-ray'
+import express from 'express';
+import Manga from '../models/Manga.js';
+import axios from 'axios';
+import cheerio from 'cheerio';
 
-const router = express.Router()
+const router = express.Router();
 
 // Listando informações de manga específico
-router.get('/:manga_name', (req, res) => {
-  const x = Xray()
+router.get('/:manga_name', async (req, res) => {
+  try {
+    const manga = await Manga.findOne({ manga_name: req.params.manga_name });
 
-  Manga.findOne({ manga_name: req.params.manga_name })
-    .then(manga => {
-      let dados = {}
-      const classFind = '#chpagedlist > ul > li:nth-child(1) > a > strong'
+    if (!manga) {
+      return res.status(404).json({ message: "Manga not found" });
+    }
 
-      x(manga.url_crawler, classFind)(function (err, cap) {
-        getData(cap)
-      })
+    const { data } = await axios.get(manga.url_crawler);
 
-      function getData(data) {
-        dados.last_ep_released = data
-        // replace all '\n' in last_ep_released
-        // replace all ' ' in last_ep_released
-        // replace '-eng-li' in last_ep_released for ' '
-        dados.last_ep_released = dados.last_ep_released.replace(/\n/g, '')
-        dados.last_ep_released = dados.last_ep_released.replace(/ /g, '')
-        dados.last_ep_released = dados.last_ep_released.replace(/-eng-li/g, '')
+    const $ = cheerio.load(data);
+    const lastChapterElement = $('.chapter-list li:first-child'); // Seleciona o último elemento da lista de capítulos
 
-        // // transform last_ep_released string to integer
-        dados.last_ep_released = parseInt(dados.last_ep_released)
+    const lastChapterNumber = lastChapterElement.find('.chapter-no').text().trim(); // Extrai o número do último capítulo
+    const lastChapterTitle = lastChapterElement.find('.chapter-title').text().trim(); // Extrai o título do último capítulo
+    const lastChapterUpdate = lastChapterElement.find('.chapter-update').text().trim(); // Extrai a data de atualização do último capítulo
 
-        res.json(dados)
-      }
-    })
-    .catch(error => res.status(500).json(error));
+    // Limpa e prepara a string do último episódio lançado
+    const cleanedLastEpReleased = `${lastChapterNumber} ${lastChapterTitle}`.replace(/\s+/g, '').replace('-eng-li', '');
+
+    res.json({
+      last_ep_released: cleanedLastEpReleased,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error", error: error.toString() });
+  }
 });
 
-export default router
+export default router;
