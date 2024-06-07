@@ -25,9 +25,10 @@ router.get('/:manga_name', async (req, res) => {
 
     // Limpa e prepara a string do último episódio lançado
     const cleanedLastEpReleased = `${lastChapterNumber} ${lastChapterTitle}`.replace(/\s+/g, '').replace('-eng-li', '');
+    const integerLastEpReleased =  parseInt(cleanedLastEpReleased)
 
     res.json({
-      last_ep_released: cleanedLastEpReleased,
+      last_ep_released: integerLastEpReleased,
     });
   } catch (error) {
     res.status(500).json({ message: "Internal Server Error", error: error.toString() });
