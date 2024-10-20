@@ -17,15 +17,16 @@ router.get('/:manga_name', async (req, res) => {
     const { data } = await axios.get(manga.url_crawler);
 
     const $ = cheerio.load(data);
-    const lastChapterElement = $('.chapter-list li:first-child'); // Seleciona o último elemento da lista de capítulos
 
-    const lastChapterNumber = lastChapterElement.find('.chapter-no').text().trim(); // Extrai o número do último capítulo
-    const lastChapterTitle = lastChapterElement.find('.chapter-title').text().trim(); // Extrai o título do último capítulo
-    const lastChapterUpdate = lastChapterElement.find('.chapter-update').text().trim(); // Extrai a data de atualização do último capítulo
+    // Seleciona o primeiro elemento da lista de capítulos
+    const lastChapterElement = $('.chapter-list li:first-child'); 
 
-    // Limpa e prepara a string do último episódio lançado
-    const cleanedLastEpReleased = `${lastChapterNumber} ${lastChapterTitle}`.replace(/\s+/g, '').replace('-eng-li', '');
-    const integerLastEpReleased =  parseInt(cleanedLastEpReleased)
+    // Extrai o número do capítulo a partir de .chapter-number e limpa o sufixo "-eng-li"
+    const lastChapterRaw = lastChapterElement.find('.chapter-number').text().trim();
+    const cleanedLastEpReleased = lastChapterRaw.replace('-eng-li', '').trim();
+
+    // Converte para inteiro
+    const integerLastEpReleased = parseInt(cleanedLastEpReleased, 10);
 
     res.json({
       last_ep_released: integerLastEpReleased,
