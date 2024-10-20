@@ -1,7 +1,7 @@
 import express from 'express';
 import Manga from '../models/Manga.js';
 import axios from 'axios';
-import cheerio from 'cheerio';
+import * as cheerio from 'cheerio';
 
 const router = express.Router();
 
