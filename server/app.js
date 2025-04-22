@@ -4,6 +4,7 @@ import bodyParser from 'body-parser'
 import routerCampo from './routes/campo.js'
 import routerLastEP from './routes/lastep.js'
 import routerLastEPMany from './routes/lastepMany.js'
+import routerCookie from './routes/cookie.js'
 
 const app = express()
 
@@ -17,5 +18,6 @@ app.get('/api/healthCheck', (req, res) => {
 app.use('/api/manga', routerCampo)
 app.use('/api/lastep', routerLastEP)
 app.use('/api/lastepmany', routerLastEPMany)
+app.use('/api/cookie', routerCookie)
 
 export default app
