@@ -14,6 +14,10 @@ const mangaSchema = new Schema({
   type: Number,
   require: true
  },
+ last_episode_released: {
+    type: Number,
+    require: false
+   },
  release_day: {
   type: String,
   require: false

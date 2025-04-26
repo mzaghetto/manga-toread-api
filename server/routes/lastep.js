@@ -4,6 +4,8 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import Cookie from '../models/Cookie.js';
 import Header from '../models/Header.js';
+import colorConsole from '../../lib/color.js'
+
 
 const router = express.Router();
 
@@ -54,8 +56,21 @@ router.get('/:manga_name', async (req, res) => {
 
     const integerLastEpReleased = parseInt(cleanedLastEpReleased, 10);
 
+    await Manga.updateOne(
+      { manga_name: req.params.manga_name },
+      { $set: { last_episode_released: integerLastEpReleased } }
+    );
+
+    colorConsole('FgWhite', '----------------');
+    colorConsole('FgGreen', `Manga Name: ${manga.name}`);
+    colorConsole('FgGreen', `Last Episode Released: ${integerLastEpReleased}`);
+    colorConsole('FgGreen', `Last Episode Read: ${manga.last_episode_read}`);
+    colorConsole('FgWhite', '----------------');
+
     res.json({
-      last_ep_released: integerLastEpReleased,
+      manga_name: manga.manga_name,
+      last_episode_released: integerLastEpReleased,
+      last_episode_read: manga.last_episode_read
     });
   } catch (error) {
     console.error(error);
