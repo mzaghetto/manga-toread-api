@@ -19,6 +19,7 @@
     "dotenv": "^14.3.2",
     "express": "^4.17.2",
     "mongoose": "^6.1.7",
+    "node-cron": "^4.2.1",
     "request": "2.88.2",
     "x-ray": "2.3.4"
   },

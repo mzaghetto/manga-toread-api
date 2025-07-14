@@ -12,8 +12,6 @@ services:
       PROXY_URL: '${PROXY_URL}'
     depends_on:
       - db
-    links:
-      - db
     ports:
       - 5001:5001
   db:
