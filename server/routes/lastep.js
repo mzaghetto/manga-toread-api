@@ -5,7 +5,7 @@ import * as cheerio from 'cheerio';
 import Cookie from '../models/Cookie.js';
 import Header from '../models/Header.js';
 import colorConsole from '../../lib/color.js'
-
+import util from 'util';
 
 const router = express.Router();
 
@@ -56,21 +56,18 @@ router.get('/:manga_name', async (req, res) => {
 
     const integerLastEpReleased = parseInt(cleanedLastEpReleased, 10);
 
-    await Manga.updateOne(
-      { manga_name: req.params.manga_name },
-      { $set: { last_episode_released: integerLastEpReleased } }
-    );
+    const mangaUpdated = await Manga.findOneAndUpdate({ manga_name: req.params.manga_name }, { last_episode_released: integerLastEpReleased }, { new: true });
 
-    colorConsole('FgWhite', '----------------');
-    colorConsole('FgGreen', `Manga Name: ${manga.name}`);
-    colorConsole('FgGreen', `Last Episode Released: ${integerLastEpReleased}`);
-    colorConsole('FgGreen', `Last Episode Read: ${manga.last_episode_read}`);
-    colorConsole('FgWhite', '----------------');
+    colorConsole('FgGreen', `Manhwa Atualizado:\n${util.inspect({
+      manga_name: mangaUpdated.manga_name,
+      last_ep_read: mangaUpdated.last_episode_read,
+      last_ep_released: mangaUpdated.last_episode_released,
+    }, { colors: true, depth: null })}`);
 
     res.json({
-      manga_name: manga.manga_name,
-      last_episode_released: integerLastEpReleased,
-      last_episode_read: manga.last_episode_read
+      manga_name: mangaUpdated.manga_name,
+      last_ep_read: mangaUpdated.last_episode_read,
+      last_ep_released: mangaUpdated.last_episode_released,
     });
   } catch (error) {
     console.error(error);
