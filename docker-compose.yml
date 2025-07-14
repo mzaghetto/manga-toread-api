@@ -3,9 +3,6 @@ services:
   server:
     container_name: NODEJS_SERVER
     build: .
-    volumes:
-      - './:/node-app'
-      - './node_modules:/node-app/node_modules'
     environment:
       NODE_ENV: development
       PORT: '${PORT}'
@@ -18,7 +15,7 @@ services:
     links:
       - db
     ports:
-      - '${PORT_PUBLISHED}:${PORT}'
+      - 5001:5001
   db:
     image: mongo
     container_name: MONGODB_SERVER
