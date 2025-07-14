@@ -16,6 +16,10 @@ services:
       - 5001:5001
     networks:
       - proxy-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nodejs-server.rule=Host(`api.local`) && PathPrefix(`/server`)"
+      - "traefik.http.services.nodejs-server.loadbalancer.server.port=5001"
   db:
     image: mongo
     container_name: MONGODB_SERVER
