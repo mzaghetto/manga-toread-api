@@ -8,19 +8,28 @@ services:
       PORT: '${PORT}'
       PORT_PUBLISHED: '${PORT_PUBLISHED}'
       DB_URL: '${DB_URL}'
-      SCRAPING_SERVICE: '${SCRAPING_SERVICE}'
+      SCRAPING_SERVICE_URL: '${SCRAPING_SERVICE_URL}'
       PROXY_URL: '${PROXY_URL}'
     depends_on:
       - db
     ports:
       - 5001:5001
+    networks:
+      - proxy-network
   db:
     image: mongo
     container_name: MONGODB_SERVER
     ports:
-      - '5002:5002'
+      - '5003:27017'
     volumes:
       - 'mongo:/data/db'
+    networks:
+      - proxy-network
+
+networks:
+  proxy-network:
+    external: true
+
 volumes:
   mongo:
     name: mongo_nodejs
