@@ -19,6 +19,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.nodejs-server.rule=Host(`${TRAEFIK_DOMAIN}`)"
+      - "traefik.http.routers.nodejs-server.entrypoints=web"
       - "traefik.http.services.nodejs-server.loadbalancer.server.port=5001"
 
   db:
