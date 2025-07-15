@@ -18,9 +18,7 @@ services:
       - proxy-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.nodejs-server.rule=Host(`${TRAEFIK_DOMAIN}`) && PathPrefix(`/manga`)"
-      - "traefik.http.middlewares.strip-manga.stripprefix.prefixes=/manga"
-      - "traefik.http.routers.nodejs-server.middlewares=strip-manga"
+      - "traefik.http.routers.nodejs-server.rule=Host(`${TRAEFIK_DOMAIN}`)"
       - "traefik.http.services.nodejs-server.loadbalancer.server.port=5001"
 
   db:
