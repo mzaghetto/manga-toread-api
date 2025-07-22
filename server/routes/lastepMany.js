@@ -9,64 +9,132 @@ import util from 'util';
 
 const router = express.Router();
 
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+const fetchWithRetry = async (url, config, maxRetries = 3) => {
+  let lastError;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await axios.get(url, config);
+      return response;
+    } catch (error) {
+      lastError = error;
+      
+      if (error.response?.status === 520 || error.response?.status === 429) {
+        const delayMs = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
+        colorConsole('FgYellow', `Tentativa ${attempt} falhou para ${url}. Aguardando ${delayMs}ms...`);
+        await delay(delayMs);
+        continue;
+      }
+      
+      throw error;
+    }
+  }
+  
+  throw lastError;
+};
+
 router.get('/', async (req, res) => {
   try {
+    const { noCookie } = req.query;
     const allManga = await Manga.find();
 
-    // Recupera cookies do banco
-    const cookieDocs = await Cookie.find({});
-    if (!cookieDocs || cookieDocs.length === 0) {
-      return res.status(400).json({ message: 'No cookies found. Please generate cookies first.' });
-    }
+    let headers = {};
+    
+    if (!noCookie) {
+      const cookieDocs = await Cookie.find({});
+      if (!cookieDocs || cookieDocs.length === 0) {
+        return res.status(400).json({ message: 'No cookies found. Please generate cookies first.' });
+      }
 
-    // Monta os cookies no formato "name=value; name2=value2"
-    const cookieString = cookieDocs.map(c => `${c.name}=${c.value}`).join('; ');
+      const cookieString = cookieDocs.map(c => `${c.name}=${c.value}`).join('; ');
 
-    // Recupera headers do banco
-    const headerDocs = await Header.find({});
-    if (!headerDocs || headerDocs.length === 0) {
-      return res.status(400).json({ message: 'No headers found. Please generate cookies and headers first.' });
+      const headerDocs = await Header.find({});
+      if (!headerDocs || headerDocs.length === 0) {
+        return res.status(400).json({ message: 'No headers found. Please generate cookies and headers first.' });
+      }
+      
+      const storedHeaders = headerDocs.reduce((acc, h) => {
+        acc[h.name] = h.value;
+        return acc;
+      }, {});
+
+      headers = {
+        ...storedHeaders,
+        'User-Agent': storedHeaders['User-Agent'] || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+        Cookie: cookieString,
+      };
+    } else {
+      headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+      };
     }
-    // Monta headers para a request
-    const storedHeaders = headerDocs.reduce((acc, h) => {
-      acc[h.name] = h.value;
-      return acc;
-    }, {});
 
     const mangasUpdated = {success: {}, error: {}};
 
-    // update each manga
     for (const manga of allManga) {
-
       try {
-      const { data } = await axios.get(manga.url_crawler, {
-        headers: {
-          ...storedHeaders,
-          Cookie: cookieString,
-        },
-      });      
+        await delay(1000 + Math.random() * 2000);
 
-      const $ = cheerio.load(data);
+        const { data } = await fetchWithRetry(manga.url_crawler, {
+          headers,
+          timeout: 30000,
+          decompress: true
+        });
 
-      // Seleciona o primeiro elemento da lista de capítulos
-      const lastChapterElement = $('.chapter-list li:first-child');
+        const $ = cheerio.load(data);
 
-      const lastChapterRaw = lastChapterElement.find('.chapter-number').text().trim();
-      const cleanedLastEpReleased = lastChapterRaw.replace('-eng-li', '').trim();
+        const lastChapterElement = $('.chapter-list li:first-child');
 
-      const integerLastEpReleased = parseInt(cleanedLastEpReleased, 10);
+        if (!lastChapterElement.length) {
+          throw new Error('Capítulo não encontrado no HTML');
+        }
 
-      const mangaUpdated = await Manga.findOneAndUpdate({ manga_name: manga.manga_name }, { last_episode_released: integerLastEpReleased }, { new: true });
+        const lastChapterRaw = lastChapterElement.find('.chapter-number').text().trim();
+        const cleanedLastEpReleased = lastChapterRaw.replace('-eng-li', '').trim();
 
-      mangasUpdated.success[mangaUpdated.manga_name] = {
-        last_ep_read: mangaUpdated.last_episode_read,
-        last_ep_released: mangaUpdated.last_episode_released,
-      };
+        const integerLastEpReleased = parseInt(cleanedLastEpReleased, 10);
+
+        if (isNaN(integerLastEpReleased)) {
+          throw new Error(`Número do capítulo inválido: ${cleanedLastEpReleased}`);
+        }
+
+        const mangaUpdated = await Manga.findOneAndUpdate(
+          { manga_name: manga.manga_name }, 
+          { last_episode_released: integerLastEpReleased }, 
+          { new: true }
+        );
+
+        mangasUpdated.success[mangaUpdated.manga_name] = {
+          last_ep_read: mangaUpdated.last_episode_read,
+          last_ep_released: mangaUpdated.last_episode_released,
+        };
 
       } catch (error) {
-        mangasUpdated.error[manga.manga_name] = error.toString();
+        mangasUpdated.error[manga.manga_name] = {
+          error: error.message || error.toString(),
+          url: manga.url_crawler
+        };
       }
     }
+    
     colorConsole('FgGreen', `Released Manhwas Atualizado:\n${util.inspect(mangasUpdated, { colors: true, depth: null })}`);
     res.json(mangasUpdated);
   } catch (error) {

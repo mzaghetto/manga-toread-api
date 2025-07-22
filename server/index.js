@@ -37,8 +37,15 @@ cron.schedule('0 * * * *', async () => {
       return
     }
     
-    const response = await axios.get(`http://localhost:${port}/api/lastepmany`)
-    colorConsole('FgGreen', 'Atualização concluída:', response.data)
+    try {
+      const response = await axios.get(`http://localhost:${port}/api/lastepmany?noCookie=true`)
+      colorConsole('FgGreen', 'Atualização concluída com noCookie=true:', response.data)
+    } catch (error) {
+      colorConsole('FgYellow', 'Primeira tentativa com noCookie=true falhou, tentando sem noCookie...')
+      
+      const response = await axios.get(`http://localhost:${port}/api/lastepmany`)
+      colorConsole('FgGreen', 'Atualização concluída com cookies salvos:', response.data)
+    }
   } catch (error) {
     colorConsole('FgRed', 'Erro na atualização automática:', error.toString())
   }
