@@ -2,3 +2,5 @@
 node_modules
 *.env
 docker-compose.yml
+.aider*
+.env
